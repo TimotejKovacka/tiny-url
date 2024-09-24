@@ -3,7 +3,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/TimotejKovacka/tiny-url/urlservice"
+	"github.com/TimotejKovacka/tiny-url/domains/url"
+	"github.com/TimotejKovacka/tiny-url/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,42 +12,27 @@ type CreateRequestBody struct {
 	LongURL string `json:"long_url"`
 }
 
+func startServer(r *gin.Engine) {
+	if err := r.Run(":8080"); err != nil {
+		panic("failed to start server")
+	}
+}
+
 func main() {
-	r := gin.Default()
 	const BASE_URL = "https://tiny-url.com/"
-	urlService := urlservice.NewURLService()
+	db := database.ConnectDB()
+	r := gin.Default()
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
 		})
 	})
-	r.POST("create", func(c *gin.Context) {
-		var reqBody CreateRequestBody
 
-		if err := c.BindJSON(&reqBody); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		shortURL := BASE_URL + urlService.LongToShort(reqBody.LongURL)
-
-		c.JSON(http.StatusCreated, gin.H{
-			"short_url": shortURL,
-		})
+	url.RegisterRoutes(r, &url.RoutesConfig{
+		DB:       db,
+		BASE_URL: BASE_URL,
 	})
-	r.GET(":urlHash", func(c *gin.Context) {
-		urlHash := c.Param("urlHash")
-		decodedURL := urlService.ShortToLong(urlHash)
 
-		if decodedURL == "" {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "URL not found",
-			})
-			return
-		}
-
-		c.Redirect(http.StatusMovedPermanently, decodedURL)
-	})
-	r.Run()
+	startServer(r)
 }
