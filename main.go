@@ -35,5 +35,18 @@ func main() {
 			"short_url": shortURL,
 		})
 	})
+	r.GET(":urlHash", func(c *gin.Context) {
+		urlHash := c.Param("urlHash")
+		decodedURL := urlService.ShortToLong(urlHash)
+
+		if decodedURL == "" {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "URL not found",
+			})
+			return
+		}
+
+		c.Redirect(http.StatusMovedPermanently, decodedURL)
+	})
 	r.Run()
 }
