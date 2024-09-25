@@ -5,6 +5,7 @@ import (
 
 	"github.com/TimotejKovacka/tiny-url/domains/url"
 	"github.com/TimotejKovacka/tiny-url/internal/database"
+	"github.com/gin-contrib/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,7 +22,9 @@ func startServer(r *gin.Engine) {
 func main() {
 	const BASE_URL = "https://tiny-url.com/"
 	db := database.ConnectDB()
-	r := gin.Default()
+	r := gin.New()
+	r.Use(logger.SetLogger())
+	r.Use(gin.Recovery())
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
