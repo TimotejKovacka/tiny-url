@@ -14,13 +14,14 @@ import (
 )
 
 type URLStorage struct {
-	db     *gorm.DB
-	tracer trace.Tracer
-	logger *zap.SugaredLogger
+	db         *gorm.DB
+	tracer     trace.Tracer
+	logger     *zap.SugaredLogger
+	URLCounter func()
 }
 
-func NewURLStorage(db *gorm.DB, tracer trace.Tracer, logger *zap.SugaredLogger) *URLStorage {
-	return &URLStorage{db: db, tracer: tracer, logger: logger}
+func NewURLStorage(db *gorm.DB, tracer trace.Tracer, logger *zap.SugaredLogger, counter func()) *URLStorage {
+	return &URLStorage{db: db, tracer: tracer, logger: logger, URLCounter: counter}
 }
 
 func (s *URLStorage) CreateURL(ctx context.Context, longURL, shortURL string) error {
@@ -43,6 +44,7 @@ func (s *URLStorage) CreateURL(ctx context.Context, longURL, shortURL string) er
 		span.SetStatus(codes.Error, "Failed to create URL record")
 		return fmt.Errorf("failed to create URL record: %w", err)
 	}
+	s.URLCounter()
 	return nil
 }
 

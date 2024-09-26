@@ -15,14 +15,15 @@ type CreateRequestBody struct {
 }
 
 type RoutesConfig struct {
-	BASE_URL string
-	DB       *gorm.DB
-	Tracer   trace.Tracer
-	Logger   *zap.SugaredLogger
+	BASE_URL   string
+	DB         *gorm.DB
+	Tracer     trace.Tracer
+	Logger     *zap.SugaredLogger
+	URLCounter func()
 }
 
 func RegisterRoutes(r *gin.Engine, config *RoutesConfig) {
-	urlStorage := NewURLStorage(config.DB, config.Tracer, config.Logger)
+	urlStorage := NewURLStorage(config.DB, config.Tracer, config.Logger, config.URLCounter)
 	urlService := NewURLService(urlStorage, config.Tracer, config.Logger)
 
 	r.POST("/create", func(c *gin.Context) {
